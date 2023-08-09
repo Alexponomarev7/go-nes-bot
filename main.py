@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import telebot
 import os
 import argparse
@@ -23,9 +24,18 @@ def start(message: telebot.types.Message):
 
 @bot.message_handler(commands=["find"])
 def find(message: telebot.types.Message):
-    application_storage.add_application(Application(message.from_user, message.chat))
-    bot.send_message(message.chat.id, "Игра ищется!")
+    if application_storage.add_application(Application(message.from_user, message.chat)):
+        bot.send_message(message.chat.id, "Игра ищется!")
+    else:
+        bot.send_message(message.chat.id, "Вы уже ищете игру!")
     
+@bot.message_handler(commands=["stop"])
+def stop(message: telebot.types.Message):
+    if application_storage.remove_application(Application(message.from_user, message.chat)):
+        bot.send_message(message.chat.id, "Поиск игры остановлен!")
+    else:
+        bot.send_message(message.chat.id, "Вы не ищете игру!")
+
 @bot.message_handler(commands=["help"])
 def help(message: telebot.types.Message):
     bot.send_message(message.chat.id, SCRIPTS["help"])

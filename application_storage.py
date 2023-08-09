@@ -31,17 +31,26 @@ class ApplicationStorage:
         self.hanging_matches.clear()
 
     @update_last_access
-    def add_application(self, application: Application):
+    def add_application(self, application: Application) -> bool:
+        if application in self.applications:
+            logging.warning(f"Application {application} already in storage")
+            return False
+
         logging.info(f"Add application {application}")
         for active_application in self.applications:
             self.try_match(application, active_application)
         self.applications.add(application)
-
+        return True
 
     @update_last_access
-    def remove_application(self, application: Application):
+    def remove_application(self, application: Application) -> bool:
+        if application not in self.applications:
+            logging.warning(f"Application {application} not in storage")
+            return False
+
         logging.info(f"Remove application {application}")
         self.applications.remove(application)
+        return True
     
     @update_last_access
     def process_possible_match(self, trigger_message_id: int) -> bool:
@@ -62,8 +71,8 @@ class ApplicationStorage:
 
         self.bot.send_message(trigger_application.chat.id, f"Это мэтч! Приятной игры с игроком @{active_application.user.username}! Если захотите сыграть ещё раз, нажмите /find")
         self.bot.send_message(active_application.chat.id, f"Это мэтч! Приятной игры с игроком @{trigger_application.user.username}! Если захотите сыграть ещё раз, нажмите /find")
-        self.remove_application(trigger_application)
-        self.remove_application(active_application)
+        assert self.remove_application(trigger_application)
+        assert self.remove_application(active_application)
         return True
 
     def try_match(self, trigger_application: Application, active_application: Application):
